@@ -4,16 +4,24 @@ require 'io/console'
 
 class Editor
   attr_reader :file_path
-  attr_accessor :x, :y, :row_count, :col_count, :scroll_offset, :visible_height
+  attr_accessor :x,
+                :y,
+                :lines,
+                :wrapped_lines,
+                :row_count,
+                :col_count,
+                :scroll_offset,
+                :visible_height
 
   def initialize(file_path)
     @file_path = file_path
     @x = 1
-    @y = 1
+    @y = 0
     @scroll_offset = 0
     @row_count, @col_count = IO.console.winsize
     @visible_height = @row_count - 1
     @lines = File.readlines(@file_path, chomp: true)
+    @wrapped_lines = @lines.flat_map { |line| wrap_line(line, @col_count) }
 
     if file_path.nil?
       puts 'No file path provided'
@@ -55,7 +63,18 @@ class Editor
   end
 
   def update_scroll_offset
-    @scroll_offset = [[0, @scroll_offset].max, @lines.size - @visible_height].min
+    @wrapped_lines = @lines.flat_map { |line| wrap_line(line, @col_count) }
+    @scroll_offset = [[0, @scroll_offset].max, @wrapped_lines.size - @visible_height].min
+  end
+
+  def wrap_line(line, width)
+    return [''] if line.nil? || line.empty?
+
+    line.scan(/.{1,#{width}}|.+/)
+  end
+
+  def visible_lines
+    @visible_lines = @wrapped_lines[@scroll_offset, @visible_height] || []
   end
 
   def draw_lines
@@ -64,17 +83,14 @@ class Editor
       print line.ljust(@col_count)
     end
     print "\e[#{@visible_height + 1};1H"
-    print "row: #{@y}/#{@lines.size} col: #{@x}/#{@col_count} offset: #{@scroll_offset}".rjust(@col_count)
-  end
-
-  def visible_lines
-    @lines[@scroll_offset, @visible_height] || []
+    print "row: #{@y}/#{@lines.size} col: #{@x}/#{@col_count + 1} offset: #{@scroll_offset}".rjust(@col_count)
   end
 
   def update_cursor_position
-    relative_cursor_y = [[1, @y - @scroll_offset].max, visible_lines.size].min
-    relative_cursor_x = [[1, @x].max, @col_count].min
-    [relative_cursor_x, relative_cursor_y]
+    @y = [[0, @y].max, @wrapped_lines.size - 1].min
+    @x = [[1, @x].max, @col_count].min
+    relative_cursor_y = @y - @scroll_offset
+    [@x, relative_cursor_y + 1]
   end
 
   def move_cursor(x, y)
