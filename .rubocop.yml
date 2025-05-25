@@ -14,3 +14,6 @@ Naming/MethodParameterName:
 
 Metrics/AbcSize:
   Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false

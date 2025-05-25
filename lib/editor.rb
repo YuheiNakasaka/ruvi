@@ -4,13 +4,15 @@ require 'io/console'
 
 class Editor
   attr_reader :file_path
-  attr_accessor :x, :y, :row_count, :col_count
+  attr_accessor :x, :y, :row_count, :col_count, :scroll_offset, :visible_height
 
   def initialize(file_path)
     @file_path = file_path
     @x = 1
     @y = 1
+    @scroll_offset = 0
     @row_count, @col_count = IO.console.winsize
+    @visible_height = @row_count - 1
     @lines = File.readlines(@file_path, chomp: true)
 
     if file_path.nil?
@@ -34,9 +36,10 @@ class Editor
       loop do
         clear_screen
         update_window_size
+        update_scroll_offset
         draw_lines
-        update_cursor_position
-        move_cursor(@x, @y)
+        @x, y = update_cursor_position
+        move_cursor(@x, y)
         break if handle_input == :quit
       end
     end
@@ -51,20 +54,27 @@ class Editor
     @row_count, @col_count = IO.console.winsize
   end
 
+  def update_scroll_offset
+    @scroll_offset = [[0, @scroll_offset].max, @lines.size - @visible_height].min
+  end
+
   def draw_lines
     visible_lines.each_with_index do |line, i|
       move_cursor(1, i + 1)
       print line.ljust(@col_count)
     end
+    print "\e[#{@visible_height + 1};1H"
+    print "row: #{@y}/#{@lines.size} col: #{@x}/#{@col_count} offset: #{@scroll_offset}".rjust(@col_count)
   end
 
   def visible_lines
-    @lines[0...(@row_count - 1)]
+    @lines[@scroll_offset, @visible_height] || []
   end
 
   def update_cursor_position
-    @y = [[1, @y].max, visible_lines.size].min
-    @x = [[1, @x].max, @col_count].min
+    relative_cursor_y = [[1, @y - @scroll_offset].max, visible_lines.size].min
+    relative_cursor_x = [[1, @x].max, @col_count].min
+    [relative_cursor_x, relative_cursor_y]
   end
 
   def move_cursor(x, y)
@@ -79,9 +89,13 @@ class Editor
     when 'l', "\e[C"
       @x += 1
     when 'j', "\e[B"
+      return if @y >= @lines.size
+
       @y += 1
+      @scroll_offset += 1 if @y >= @scroll_offset + @visible_height - 1
     when 'k', "\e[A"
       @y = [1, @y - 1].max
+      @scroll_offset -= 1 if @y < @scroll_offset
     when 'q'
       :quit
     end
