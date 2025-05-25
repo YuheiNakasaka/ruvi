@@ -11,3 +11,6 @@ Metrics/MethodLength:
 
 Naming/MethodParameterName:
   Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false

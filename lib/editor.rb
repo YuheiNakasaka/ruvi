@@ -22,39 +22,53 @@ class Editor
   end
 
   def run
-    receive_user_input
+    render
   end
 
   private
 
-  def receive_user_input
+  def render
     lines = File.readlines(@file_path, chomp: true)
-
     $stdin.raw do
       loop do
-        system('clear')
-        lines.each { |line| puts line }
-
+        clear_screen
+        draw_lines(lines)
         move_cursor(@x, @y)
-        input = escaped_input
-        case input
-        when 'h', "\e[D"
-          @x = [1, @x - 1].max
-        when 'l', "\e[C"
-          @x += 1
-        when 'j', "\e[B"
-          @y += 1
-        when 'k', "\e[A"
-          @y = [1, @y - 1].max
-        when 'q'
-          break
-        end
+        break if handle_input == :quit
       end
+    end
+  end
+
+  def clear_screen
+    print "\e[2J"
+    print "\e[H"
+  end
+
+  def draw_lines(lines)
+    lines.each_with_index do |line, i|
+      move_cursor(1, i + 1)
+      print line.ljust(80)
     end
   end
 
   def move_cursor(x, y)
     print "\e[#{y};#{x}H"
+  end
+
+  def handle_input
+    input = escaped_input
+    case input
+    when 'h', "\e[D"
+      @x = [1, @x - 1].max
+    when 'l', "\e[C"
+      @x += 1
+    when 'j', "\e[B"
+      @y += 1
+    when 'k', "\e[A"
+      @y = [1, @y - 1].max
+    when 'q'
+      :quit
+    end
   end
 
   def escaped_input
