@@ -1,0 +1,13 @@
+# frozen_string_literal: true
+
+AllCops:
+  TargetRubyVersion: 3.4
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Naming/MethodParameterName:
+  Enabled: false
