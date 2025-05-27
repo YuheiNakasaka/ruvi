@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative 'editor'
+require_relative 'screen'
+require_relative 'escape_code'
 
 def main
   args = ARGV
