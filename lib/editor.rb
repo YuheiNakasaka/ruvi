@@ -3,9 +3,6 @@
 require 'io/console'
 
 class Editor
-  attr_reader :file_path, :screen
-  attr_accessor :mode
-
   def initialize(file_path)
     @file_path = file_path
 
@@ -20,22 +17,16 @@ class Editor
     end
 
     @screen = Screen.new(File.readlines(@file_path, chomp: true))
-    @mode = :normal
+    @input = Input.new(screen: @screen)
   end
 
   def run
-    render
-  end
-
-  private
-
-  def render
     $stdin.raw do
       loop do
         EscapeCode.clear_screen
         @screen.update_scroll_offset
         @screen.draw_lines
-        @screen.draw_status_bar(@mode)
+        @input.draw_status_bar
         @screen.update_cursor_position
         result = handle_input
         break if result == :quit
@@ -44,39 +35,15 @@ class Editor
     end
   end
 
+  private
+
   def handle_input
-    if @mode == :normal
-      input = escaped_input
-      case input
-      when 'h', "\e[D"
-        @screen.move_left
-      when 'l', "\e[C"
-        @screen.move_right
-      when 'j', "\e[B"
-        return if @screen.over_bottom?
-
-        @screen.move_down
-      when 'k', "\e[A"
-        @screen.move_up
-      when 'i'
-        @mode = :insert
-      when 'q'
-        :quit
-      end
-    elsif @mode == :insert
-      input = $stdin.getch
-      @mode = :normal if input == "\e"
-    end
-  end
-
-  def escaped_input
-    input = $stdin.getch
-    case input
-    when "\e"
-      input << $stdin.getch
-      input << $stdin.getch
-    else
-      input
+    if @input.normal?
+      @input.handle_normal
+    elsif @input.insert?
+      @input.handle_insert
+    elsif @input.command?
+      @input.handle_command
     end
   end
 end

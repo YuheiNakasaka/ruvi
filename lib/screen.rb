@@ -1,15 +1,8 @@
 # frozen_string_literal: true
 
 class Screen
-  attr_reader :lines,
-              :display_lines
-  attr_accessor :abs_x,
-                :abs_y,
-                :row,
-                :col,
-                :scroll_offset,
-                :visible_height,
-                :visible_width
+  attr_reader :visible_height,
+              :visible_width
 
   def initialize(lines)
     @abs_x = 1
@@ -27,11 +20,6 @@ class Screen
       EscapeCode.move_to(1, i + 1)
       print line.ljust(visible_width)
     end
-  end
-
-  def draw_status_bar(mode)
-    print "\e[#{visible_height + 1};1H"
-    print "mode: #{mode} row: #{row_counter} col: #{col_counter} offset: #{scroll_offset}".rjust(visible_width)
   end
 
   def update_scroll_offset

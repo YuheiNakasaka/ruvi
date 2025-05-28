@@ -2,6 +2,7 @@
 
 require_relative 'editor'
 require_relative 'screen'
+require_relative 'input'
 require_relative 'escape_code'
 
 def main
