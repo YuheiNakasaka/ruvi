@@ -22,35 +22,16 @@ class Screen
     @display_lines = @lines.flat_map { |line| wrap_line(line, @col) }
   end
 
-  def row_counter
-    "#{abs_y}/#{lines.size}"
-  end
-
-  def col_counter
-    "#{@abs_x}/#{@col + 1}"
-  end
-
-  def visible_lines
-    @display_lines[@scroll_offset, @visible_height] || []
-  end
-
-  def wrap_line(line, width)
-    return [''] if line.nil? || line.empty?
-
-    line.scan(/.{1,#{width}}|.+/)
-  end
-
   def draw_lines
     visible_lines.each_with_index do |line, i|
       EscapeCode.move_to(1, i + 1)
       print line.ljust(visible_width)
     end
-    print "\e[#{visible_height + 1};1H"
-    print "row: #{row_counter} col: #{col_counter} offset: #{scroll_offset}".rjust(visible_width)
   end
 
-  def update_window_size
-    @row, @col = IO.console.winsize
+  def draw_status_bar(mode)
+    print "\e[#{visible_height + 1};1H"
+    print "mode: #{mode} row: #{row_counter} col: #{col_counter} offset: #{scroll_offset}".rjust(visible_width)
   end
 
   def update_scroll_offset
@@ -85,5 +66,25 @@ class Screen
 
   def over_bottom?
     @abs_y >= @lines.size
+  end
+
+  private
+
+  def row_counter
+    "#{abs_y}/#{lines.size}"
+  end
+
+  def col_counter
+    "#{@abs_x}/#{@col + 1}"
+  end
+
+  def visible_lines
+    @display_lines[@scroll_offset, @visible_height] || []
+  end
+
+  def wrap_line(line, width)
+    return [''] if line.nil? || line.empty?
+
+    line.scan(/.{1,#{width}}|.+/)
   end
 end
