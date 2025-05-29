@@ -89,6 +89,15 @@ class Screen
     @abs_x += 1
   end
 
+  def delete_char
+    line_index, wrap_index = @line_map[@abs_y]
+    line = @lines[line_index]
+    delete_pos = (wrap_index * @col) + @abs_x - 1
+    delete_pos = [line.size, delete_pos].min
+    @lines[line_index] = "#{line.dup.slice(0, delete_pos)}#{line.dup.slice(delete_pos + 1..-1)}"
+    @abs_x = [@abs_x - 1, 1].max
+  end
+
   private
 
   def adjust_x_position

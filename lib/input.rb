@@ -36,6 +36,8 @@ class Input
       @screen.move_up
     when 'i'
       @mode = :insert
+    when 'x'
+      @screen.delete_char
     when ':'
       @mode = :command
     end
