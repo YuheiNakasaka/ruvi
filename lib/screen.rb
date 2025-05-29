@@ -81,20 +81,14 @@ class Screen
   end
 
   def insert_char(input)
-    line_index, wrap_index = @line_map[@abs_y]
-    line = @lines[line_index]
-    insert_pos = (wrap_index * @col) + @abs_x - 1
-    insert_pos = [line.size, insert_pos].min
-    @lines[line_index] = line.dup.insert(insert_pos, input)
+    line_index, line, pos = char_position
+    @lines[line_index] = line.dup.insert(pos, input)
     @abs_x += 1
   end
 
   def delete_char
-    line_index, wrap_index = @line_map[@abs_y]
-    line = @lines[line_index]
-    delete_pos = (wrap_index * @col) + @abs_x - 1
-    delete_pos = [line.size, delete_pos].min
-    @lines[line_index] = "#{line.dup.slice(0, delete_pos)}#{line.dup.slice(delete_pos + 1..-1)}"
+    line_index, line, pos = char_position
+    @lines[line_index] = "#{line.dup.slice(0, pos)}#{line.dup.slice(pos + 1..-1)}"
     @abs_x = [@abs_x - 1, 1].max
   end
 
@@ -116,5 +110,13 @@ class Screen
     return [''] if line.nil? || line.empty?
 
     line.scan(/.{1,#{width}}|.+/)
+  end
+
+  def char_position
+    line_index, wrap_index = @line_map[@abs_y]
+    line = @lines[line_index]
+    pos = (wrap_index * @col) + @abs_x - 1
+    pos = [line.size, pos].min
+    [line_index, line, pos]
   end
 end
