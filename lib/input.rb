@@ -38,8 +38,6 @@ class Input
       @mode = :insert
     when ':'
       @mode = :command
-    when 'q'
-      :quit
     end
   end
 

@@ -56,17 +56,24 @@ class Screen
   end
 
   def move_right
-    @abs_x = [@abs_x + 1, @visible_width].min
+    current_display_line_index = @abs_y
+    return if current_display_line_index >= @display_lines.size
+
+    current_line = @display_lines[current_display_line_index] || ''
+    max_x = current_line.length + 1
+    @abs_x = [@abs_x + 1, max_x].min
   end
 
   def move_down
     @abs_y += 1
     @scroll_offset += 1 if @abs_y >= @scroll_offset + @visible_height - 1
+    adjust_x_position
   end
 
   def move_up
     @abs_y = [0, @abs_y - 1].max
     @scroll_offset -= 1 if @abs_y < @scroll_offset
+    adjust_x_position
   end
 
   def over_bottom?
@@ -83,6 +90,14 @@ class Screen
   end
 
   private
+
+  def adjust_x_position
+    return if @abs_y >= @display_lines.size
+
+    current_line = @display_lines[@abs_y] || ''
+    max_x = current_line.length + 1
+    @abs_x = [@abs_x, max_x].min
+  end
 
   def visible_lines
     @display_lines[@scroll_offset, @visible_height] || []
