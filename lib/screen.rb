@@ -11,8 +11,30 @@ class Screen
     @scroll_offset = 0
     @visible_width = @col
     @visible_height = @row - 1
+    @total_display_lines = 0
     @lines = lines
-    @display_lines = @lines.flat_map { |line| wrap_line(line, @col) }
+    @display_lines = []
+    @line_map = [] # [[元の行数, 折り返した行数]]
+  end
+
+  def init_logical_lines
+    @display_lines = []
+    @lines.each_with_index do |line, i|
+      wraps = wrap_line(line, @col)
+      wraps.each_with_index do |wrap, j|
+        @display_lines << wrap
+        @line_map << [i, j]
+      end
+    end
+  end
+
+  def update_scroll_offset
+    @total_display_lines = @display_lines.size
+    @scroll_offset = [[0, @scroll_offset].max, @total_display_lines - @visible_height].min
+  end
+
+  def clear_screen
+    EscapeCode.clear_screen
   end
 
   def draw_lines
@@ -22,13 +44,8 @@ class Screen
     end
   end
 
-  def update_scroll_offset
-    @display_lines = @lines.flat_map { |line| wrap_line(line, @col) }
-    @scroll_offset = [[0, @scroll_offset].max, @display_lines.size - @visible_height].min
-  end
-
   def update_cursor_position
-    @abs_y = [[0, @abs_y].max, @display_lines.size - 1].min
+    @abs_y = [[0, @abs_y].max, @total_display_lines].min
     @abs_x = [[1, @abs_x].max, @col].min
     relative_cursor_y = @abs_y - @scroll_offset
     EscapeCode.move_to(@abs_x, relative_cursor_y + 1)
@@ -48,7 +65,7 @@ class Screen
   end
 
   def move_up
-    @abs_y = [1, @abs_y - 1].max
+    @abs_y = [0, @abs_y - 1].max
     @scroll_offset -= 1 if @abs_y < @scroll_offset
   end
 
@@ -56,15 +73,16 @@ class Screen
     @abs_y >= @lines.size
   end
 
+  def insert_char(input)
+    line_index, wrap_index = @line_map[@abs_y]
+    line = @lines[line_index]
+    insert_pos = (wrap_index * @col) + @abs_x - 1
+    insert_pos = [line.size, insert_pos].min
+    @lines[line_index] = line.dup.insert(insert_pos, input)
+    @abs_x += 1
+  end
+
   private
-
-  def row_counter
-    "#{abs_y}/#{lines.size}"
-  end
-
-  def col_counter
-    "#{@abs_x}/#{@col + 1}"
-  end
 
   def visible_lines
     @display_lines[@scroll_offset, @visible_height] || []

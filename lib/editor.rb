@@ -23,8 +23,9 @@ class Editor
   def run
     $stdin.raw do
       loop do
-        EscapeCode.clear_screen
+        @screen.init_logical_lines
         @screen.update_scroll_offset
+        @screen.clear_screen
         @screen.draw_lines
         @input.draw_status_bar
         @screen.update_cursor_position

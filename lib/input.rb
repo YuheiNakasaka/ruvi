@@ -45,7 +45,25 @@ class Input
 
   def handle_insert
     input = escaped_input
-    @mode = :normal if input == "\e"
+    return @mode = :normal if input == "\e"
+
+    # 矢印移動だけはサポート
+    case input
+    when "\e[D"
+      @screen.move_left
+    when "\e[C"
+      @screen.move_right
+    when "\e[B"
+      return if @screen.over_bottom?
+
+      @screen.move_down
+    when "\e[A"
+      @screen.move_up
+    end
+
+    return if input.start_with?("\e") || input.start_with?("\n")
+
+    @screen.insert_char(input)
   end
 
   def handle_command
