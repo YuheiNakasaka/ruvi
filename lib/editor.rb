@@ -11,12 +11,10 @@ class Editor
       exit
     end
 
-    unless File.exist?(file_path)
-      puts 'File does not exist'
-      exit
-    end
+    File.write(file_path, '') unless File.exist?(file_path)
 
-    @screen = Screen.new(File.readlines(@file_path, chomp: true))
+    lines = File.exist?(file_path) && !File.zero?(file_path) ? File.readlines(@file_path, chomp: true) : []
+    @screen = Screen.new(lines)
     @input = Input.new(screen: @screen)
   end
 

@@ -21,6 +21,10 @@ class Screen
   def init_logical_lines
     @display_lines = []
     @line_map = []
+
+    # 空ファイルの場合は空行を1つ追加
+    @lines = [''] if @lines.empty?
+
     @lines.each_with_index do |line, i|
       wraps = wrap_line(line, @col)
       wraps.each_with_index do |wrap, j|
@@ -114,6 +118,19 @@ class Screen
     @editted = true
   end
 
+  def insert_newline
+    line_index, line, pos = char_position
+    left_part = line[0...pos]
+    right_part = line[pos..] || ''
+
+    @lines[line_index] = left_part
+    @lines.insert(line_index + 1, right_part)
+
+    @abs_y += 1
+    @abs_x = 1
+    @editted = true
+  end
+
   def delete_char
     line_index, line, pos = char_position
     @lines[line_index] = "#{line.dup.slice(0, pos)}#{line.dup.slice(pos + 1..-1)}"
@@ -142,7 +159,8 @@ class Screen
   end
 
   def save_file(file_path)
-    File.write(file_path, @lines.join("\n"))
+    content = @lines.empty? ? '' : @lines.join("\n")
+    File.write(file_path, content)
   end
 
   def search_down(pattern)
@@ -246,8 +264,10 @@ class Screen
   end
 
   def char_position
+    return [0, '', 0] if @line_map.empty? || @abs_y >= @line_map.size
+
     line_index, wrap_index = @line_map[@abs_y]
-    line = @lines[line_index]
+    line = @lines[line_index] || ''
     pos = (wrap_index * @col) + @abs_x - 1
     pos = [line.size, pos].min
     [line_index, line, pos]

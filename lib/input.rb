@@ -88,11 +88,13 @@ class Input
       @screen.move_down
     when "\e[A"
       @screen.move_up
+    when "\n", "\r"
+      @screen.insert_newline
+    else
+      return if input.start_with?("\e")
+
+      @screen.insert_char(input)
     end
-
-    return if input.start_with?("\e") || input.start_with?("\n")
-
-    @screen.insert_char(input)
   end
 
   def handle_command
