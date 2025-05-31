@@ -20,6 +20,7 @@ class Screen
 
   def init_logical_lines
     @display_lines = []
+    @line_map = []
     @lines.each_with_index do |line, i|
       wraps = wrap_line(line, @col)
       wraps.each_with_index do |wrap, j|
@@ -46,7 +47,8 @@ class Screen
   end
 
   def update_cursor_position
-    @abs_y = [[0, @abs_y].max, @total_display_lines].min
+    max_y = [@total_display_lines - 1, 0].max
+    @abs_y = [[0, @abs_y].max, max_y].min
     @abs_x = [[1, @abs_x].max, @col].min
     relative_cursor_y = @abs_y - @scroll_offset
     EscapeCode.move_to(@abs_x, relative_cursor_y + 1)
@@ -118,6 +120,27 @@ class Screen
     @abs_x = [@abs_x - 1, 1].max
   end
 
+  def delete_line
+    return if @lines.empty?
+
+    current_line_index, _wrap_index = @line_map[@abs_y] || [0, 0]
+    @lines.delete_at(current_line_index)
+    @editted = true
+
+    if @lines.empty?
+      @abs_y = 0
+      @abs_x = 1
+      return
+    end
+
+    @abs_y = if current_line_index >= @lines.size
+               find_last_display_line_of_source_line(@lines.size - 1)
+             else
+               find_first_display_line_of_source_line(current_line_index)
+             end
+    @abs_x = 1
+  end
+
   def save_file(file_path)
     File.write(file_path, @lines.join("\n"))
   end
@@ -148,5 +171,23 @@ class Screen
     pos = (wrap_index * @col) + @abs_x - 1
     pos = [line.size, pos].min
     [line_index, line, pos]
+  end
+
+  def find_first_display_line_of_source_line(source_line_index)
+    [display_line_index(source_line_index) - 1, @total_display_lines - 1].min
+  end
+
+  def find_last_display_line_of_source_line(source_line_index)
+    [display_line_index(source_line_index) - 1, 0].max
+  end
+
+  def display_line_index(source_line_index)
+    index = 0
+    (0..source_line_index).each do |i|
+      line = @lines[i] || ''
+      wraps = wrap_line(line, @col)
+      index += wraps.size
+    end
+    index
   end
 end

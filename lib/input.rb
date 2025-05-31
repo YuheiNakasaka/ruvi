@@ -46,6 +46,8 @@ class Input
       @mode = :insert
     when 'x'
       @screen.delete_char
+    when 'dd'
+      @screen.delete_line
     when ':'
       @mode = :command
     end
@@ -146,6 +148,8 @@ class Input
       rescue Timeout::Error
         input
       end
+    when normal? && 'd'
+      input << $stdin.getch
     else
       input
     end
