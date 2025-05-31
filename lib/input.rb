@@ -21,6 +21,14 @@ class Input
     @mode == :command
   end
 
+  def search_down?
+    @mode == :search_down
+  end
+
+  def search_up?
+    @mode == :search_up
+  end
+
   def handle_normal
     input = escaped_input
     case input
@@ -48,7 +56,18 @@ class Input
       @screen.delete_char
     when 'dd'
       @screen.delete_line
+    when '/'
+      clear_command
+      @mode = :search_down
+    when '?'
+      clear_command
+      @mode = :search_up
+    when 'n'
+      @screen.search_down(command_text)
+    when 'N'
+      @screen.search_up(command_text)
     when ':'
+      clear_command
       @mode = :command
     end
   end
@@ -82,16 +101,35 @@ class Input
       @mode = :normal
       clear_command
     elsif ["\n", "\r"].include?(input)
-      resp = case command
+      resp = case command_text
              when 'q'
                :quit
              when 'wq!'
                :write_quit_force
              when 'q!'
                :quit_force
+             else
+               :unknown_command
              end
       clear_command
       resp
+    else
+      @command << input
+    end
+  end
+
+  def handle_search
+    input = $stdin.getch
+    if input == "\e"
+      @mode = :normal
+      clear_command
+    elsif ["\n", "\r"].include?(input)
+      if search_down?
+        @screen.search_down(command_text)
+      elsif search_up?
+        @screen.search_up(command_text)
+      end
+      @mode = :normal
     else
       @command << input
     end
@@ -108,7 +146,11 @@ class Input
     if insert?
       print '--- INSERT ---'.ljust(@screen.visible_width)
     elsif command?
-      print ":#{command}".ljust(@screen.visible_width)
+      print ":#{command_text}".ljust(@screen.visible_width)
+    elsif search_down?
+      print "/#{command_text}".ljust(@screen.visible_width)
+    elsif search_up?
+      print "?#{command_text}".ljust(@screen.visible_width)
     else
       print ''.ljust(@screen.visible_width)
     end
@@ -128,7 +170,7 @@ class Input
 
   private
 
-  def command
+  def command_text
     @command.join
   end
 

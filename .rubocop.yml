@@ -17,3 +17,12 @@ Metrics/AbcSize:
 
 Metrics/CyclomaticComplexity:
   Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Lint/NonLocalExitFromIterator:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false

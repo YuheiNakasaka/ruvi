@@ -123,7 +123,7 @@ class Screen
   def delete_line
     return if @lines.empty?
 
-    current_line_index, _wrap_index = @line_map[@abs_y] || [0, 0]
+    current_line_index, = @line_map[@abs_y] || [0, 0]
     @lines.delete_at(current_line_index)
     @editted = true
 
@@ -143,6 +143,86 @@ class Screen
 
   def save_file(file_path)
     File.write(file_path, @lines.join("\n"))
+  end
+
+  def search_down(pattern)
+    return if pattern.empty?
+
+    begin
+      regex = Regexp.new(pattern, Regexp::IGNORECASE)
+    rescue RegexpError
+      return
+    end
+
+    current_line_index, = @line_map[@abs_y] || [0, 0]
+    current_pos = char_position[2]
+
+    current_line = @lines[current_line_index] || ''
+    match = current_line.match(regex, current_pos + 1)
+    if match
+      move_to_match(current_line_index, match.offset(0)[0])
+      return
+    end
+
+    @lines[(current_line_index + 1)..].each_with_index do |line, i|
+      match = line.match(regex)
+      if match
+        move_to_match(current_line_index + 1 + i, match.offset(0)[0])
+        return
+      end
+    end
+
+    @lines[0..current_line_index].each_with_index do |line, i|
+      match = line.match(regex)
+      if match
+        move_to_match(i, match.offset(0)[0])
+        return
+      end
+    end
+  end
+
+  def search_up(pattern)
+    return if pattern.empty?
+
+    begin
+      regex = Regexp.new(pattern, Regexp::IGNORECASE)
+    rescue RegexpError
+      return
+    end
+
+    current_line_index, = @line_map[@abs_y] || [0, 0]
+    current_pos = char_position[2]
+
+    current_line = @lines[current_line_index] || ''
+    if current_pos.positive?
+      line_part = current_line[0...current_pos]
+      matches = []
+      line_part.scan(regex) { matches << [Regexp.last_match.offset(0)[0], ::Regexp.last_match(0)] }
+      unless matches.empty?
+        move_to_match(current_line_index, matches.last[0])
+        return
+      end
+    end
+
+    @lines[0...current_line_index].reverse.each_with_index do |line, i|
+      matches = []
+      line.scan(regex) { matches << [Regexp.last_match.offset(0)[0], ::Regexp.last_match(0)] }
+      next if matches.empty?
+
+      actual_line_index = current_line_index - 1 - i
+      move_to_match(actual_line_index, matches.last[0])
+      return
+    end
+
+    @lines[current_line_index..].reverse.each_with_index do |line, i|
+      matches = []
+      line.scan(regex) { matches << [Regexp.last_match.offset(0)[0], ::Regexp.last_match(0)] }
+      next if matches.empty?
+
+      actual_line_index = @lines.size - 1 - i
+      move_to_match(actual_line_index, matches.last[0])
+      return
+    end
   end
 
   private
@@ -189,5 +269,30 @@ class Screen
       index += wraps.size
     end
     index
+  end
+
+  def move_to_match(line_index, char_pos)
+    @abs_x = char_pos + 1
+
+    display_line_index = 0
+    (0...line_index).each do |i|
+      line = @lines[i] || ''
+      wraps = wrap_line(line, @col)
+      display_line_index += wraps.size
+    end
+
+    wrap_index = char_pos / @col
+    display_line_index += wrap_index
+    @abs_x = (char_pos % @col) + 1
+
+    @abs_y = display_line_index
+
+    if @abs_y < @scroll_offset
+      @scroll_offset = @abs_y
+    elsif @abs_y >= @scroll_offset + @visible_height
+      @scroll_offset = @abs_y - @visible_height + 1
+    end
+
+    @scroll_offset = [[0, @scroll_offset].max, [@total_display_lines - @visible_height, 0].max].min
   end
 end

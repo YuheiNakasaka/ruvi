@@ -33,6 +33,10 @@ class Editor
         case handle_input
         when :insert
           next
+        when :search_down
+          next
+        when :search_up
+          next
         when :quit_force
           break
         when :quit
@@ -59,6 +63,8 @@ class Editor
       @input.handle_insert
     elsif @input.command?
       @input.handle_command
+    elsif @input.search_down? || @input.search_up?
+      @input.handle_search
     end
   end
 end
