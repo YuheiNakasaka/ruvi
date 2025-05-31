@@ -30,15 +30,22 @@ class Editor
         @input.draw_status_bar
         @screen.update_cursor_position
 
-        result = handle_input
-        next if result == :insert
-        break if result == :quit_force
+        case handle_input
+        when :insert
+          next
+        when :quit_force
+          break
+        when :quit
+          break unless @screen.dirty?
 
-        next unless result == :quit
-        break unless @screen.dirty?
-
-        @input.draw_status_bar(message: ': No write since last change (add ! to override)')
-        @input.to_command_mode
+          @input.draw_status_bar(message: ': No write since last change (add ! to override)')
+          @input.to_command_mode
+        when :write_quit_force
+          @screen.save_file(@file_path)
+          break
+        else
+          next
+        end
       end
     end
   end

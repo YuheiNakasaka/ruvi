@@ -75,10 +75,6 @@ class Input
       resp = case command
              when 'q'
                :quit
-             when 'w'
-               :write
-             when 'wq'
-               :write_quit
              when 'wq!'
                :write_quit_force
              when 'q!'

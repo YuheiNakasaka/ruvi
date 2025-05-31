@@ -98,6 +98,10 @@ class Screen
     @abs_x = [@abs_x - 1, 1].max
   end
 
+  def save_file(file_path)
+    File.write(file_path, @lines.join("\n"))
+  end
+
   private
 
   def adjust_x_position
