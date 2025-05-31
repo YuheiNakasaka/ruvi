@@ -29,9 +29,16 @@ class Editor
         @screen.draw_lines
         @input.draw_status_bar
         @screen.update_cursor_position
+
         result = handle_input
-        break if result == :quit
         next if result == :insert
+        break if result == :quit_force
+
+        next unless result == :quit
+        break unless @screen.dirty?
+
+        @input.draw_status_bar(message: ': No write since last change (add ! to override)')
+        @input.to_command_mode
       end
     end
   end

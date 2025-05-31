@@ -15,6 +15,7 @@ class Screen
     @lines = lines
     @display_lines = []
     @line_map = [] # [[元の行数, 折り返した行数]]
+    @editted = false
   end
 
   def init_logical_lines
@@ -80,10 +81,15 @@ class Screen
     @abs_y >= @lines.size
   end
 
+  def dirty?
+    @editted
+  end
+
   def insert_char(input)
     line_index, line, pos = char_position
     @lines[line_index] = line.dup.insert(pos, input)
     @abs_x += 1
+    @editted = true
   end
 
   def delete_char

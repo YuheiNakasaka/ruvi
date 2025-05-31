@@ -91,8 +91,14 @@ class Input
     end
   end
 
-  def draw_status_bar
+  def draw_status_bar(message: '')
     print "\e[#{@screen.visible_height + 1};1H"
+
+    unless message.empty?
+      print message.ljust(@screen.visible_width)
+      return
+    end
+
     if insert?
       print '--- INSERT ---'.ljust(@screen.visible_width)
     elsif command?
@@ -100,6 +106,18 @@ class Input
     else
       print ''.ljust(@screen.visible_width)
     end
+  end
+
+  def to_command_mode
+    loop do
+      input = escaped_input
+      case input
+      when ':'
+        @mode = :command
+        break
+      end
+    end
+    clear_command
   end
 
   private
