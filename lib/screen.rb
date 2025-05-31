@@ -77,6 +77,14 @@ class Screen
     adjust_x_position
   end
 
+  def move_head
+    @abs_x = 1
+  end
+
+  def move_tail
+    @abs_x = @display_lines[@abs_y].length + 1
+  end
+
   def over_bottom?
     @abs_y >= @lines.size
   end

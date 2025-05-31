@@ -34,6 +34,10 @@ class Input
       @screen.move_down
     when 'k', "\e[A"
       @screen.move_up
+    when '^'
+      @screen.move_head
+    when '$'
+      @screen.move_tail
     when 'i'
       @mode = :insert
     when 'x'
