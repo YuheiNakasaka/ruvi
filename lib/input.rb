@@ -38,6 +38,10 @@ class Input
       @screen.move_head
     when '$'
       @screen.move_tail
+    when "\u0006"
+      @screen.move_page_down
+    when "\u0002"
+      @screen.move_page_up
     when 'i'
       @mode = :insert
     when 'x'

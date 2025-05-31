@@ -85,6 +85,18 @@ class Screen
     @abs_x = @display_lines[@abs_y].length + 1
   end
 
+  def move_page_down
+    @abs_y = [@abs_y + @visible_height, @total_display_lines].min
+    @scroll_offset = [[0, @scroll_offset + @visible_height].max, @total_display_lines - @visible_height].min
+    adjust_x_position
+  end
+
+  def move_page_up
+    @abs_y = [0, @abs_y - @visible_height].max
+    @scroll_offset = [[0, @scroll_offset - @visible_height].max, @total_display_lines - @visible_height].min
+    adjust_x_position
+  end
+
   def over_bottom?
     @abs_y >= @lines.size
   end
