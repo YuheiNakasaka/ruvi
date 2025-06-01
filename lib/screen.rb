@@ -36,7 +36,7 @@ class Screen
 
   def update_scroll_offset
     @total_display_lines = @display_lines.size
-    @scroll_offset = [[0, @scroll_offset].max, @total_display_lines - @visible_height].min
+    @scroll_offset = safe_scroll_offset([0, @scroll_offset].max)
   end
 
   def clear_screen
@@ -93,13 +93,13 @@ class Screen
 
   def move_page_down
     @abs_y = [@abs_y + @visible_height, @total_display_lines].min
-    @scroll_offset = [[0, @scroll_offset + @visible_height].max, @total_display_lines - @visible_height].min
+    @scroll_offset = safe_scroll_offset([0, @scroll_offset + @visible_height].max)
     adjust_x_position
   end
 
   def move_page_up
     @abs_y = [0, @abs_y - @visible_height].max
-    @scroll_offset = [[0, @scroll_offset - @visible_height].max, @total_display_lines - @visible_height].min
+    @scroll_offset = safe_scroll_offset([0, @scroll_offset - @visible_height].max)
     adjust_x_position
   end
 
@@ -313,6 +313,12 @@ class Screen
       @scroll_offset = @abs_y - @visible_height + 1
     end
 
-    @scroll_offset = [[0, @scroll_offset].max, [@total_display_lines - @visible_height, 0].max].min
+    @scroll_offset = safe_scroll_offset([0, @scroll_offset].max)
+  end
+
+  def safe_scroll_offset(offset)
+    return 0 if @total_display_lines <= @visible_height
+
+    [offset, @total_display_lines - @visible_height].min
   end
 end
