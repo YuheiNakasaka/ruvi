@@ -22,7 +22,6 @@ class Screen
     @display_lines = []
     @line_map = []
 
-    # 空ファイルの場合は空行を1つ追加
     @lines = [''] if @lines.empty?
 
     @lines.each_with_index do |line, i|
