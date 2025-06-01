@@ -59,10 +59,9 @@ ruby bin/vi <file-path>
 - Regular character input
 
 #### Command Mode
-- `:w`: Save file
-- `:q`: Quit
 - `:wq`: Save and quit
-- `:q!`: Force quit
+- `:q`: Quit
+- `:q!`: Force quit without saving
 
 #### Search Mode
 - `Enter`: Execute search

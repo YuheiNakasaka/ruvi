@@ -106,7 +106,7 @@ class Input
       resp = case command_text
              when 'q'
                :quit
-             when 'wq!'
+             when 'wq'
                :write_quit_force
              when 'q!'
                :quit_force
