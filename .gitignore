@@ -6,3 +6,4 @@
 **/logs
 **/temp
 test.*
+spec/examples.txt
